@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+  django:
+    build: .
+    container_name: django
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    env_file:
+      - .env
+
+  celery:
+    build: .
+    container_name: celery
+    command: celery -A TehranPayment worker --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - django
+      - redis
+    env_file:
+      - .env
+
+  celery-beat:
+    build: .
+    container_name: celery-beat
+    command: celery -A TehranPayment beat --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - django
+      - redis
+    env_file:
+      - .env
+
+  redis:
+    image: "redis:alpine"
+    container_name: redis
+    ports:
+      - "6379:6379"
